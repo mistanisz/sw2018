@@ -85,7 +85,7 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void sntp_dns_found(const char* hostname, ip4_addr *ipaddr, void *arg);
+static void sntp_dns_found(const char* hostname, ip4_addr_t *ipaddr, void *arg);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -426,7 +426,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 static void
-sntp_dns_found(const char* hostname, ip4_addr *ipaddr, void *arg)
+sntp_dns_found(const char* hostname, ip4_addr_t *ipaddr, void *arg)
 {
   if (ipaddr != NULL) {
     xprintf("%#x\n", ipaddr->addr);
