@@ -435,6 +435,26 @@ sntp_dns_found(const char* hostname, ip4_addr_t *ipaddr, void *arg)
   }
 }
 
+static void
+display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
+{
+//   time_t seconds = time(NULL);
+//   char buffer[32];
+//   strftime(buffer, 32, "%H:%M:%S\n", localtime(&seconds));
+//   xprintf("Time is: %s", buffer);
+//   RTC_TimeTypeDef t;
+//   RTC_DateTypeDef d;
+  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  xprintf("Time is: %d:%d:%d\n", t->Hours, t->Minutes, t->Seconds);
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -451,35 +471,45 @@ void StartDefaultTask(void const * argument)
 
 
   /* USER CODE BEGIN 5 */
-  pcb = udp_new();
-  ip_set_option(pcb, SOF_BROADCAST);
-  udp_bind(pcb, IP_ADDR_ANY, 0);
-  udp_connect(pcb, IP_ADDR_ANY, 10);
-  xprintf("Default task start\n");
-  struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
-  struct ip4_addr resolved;
+//   pcb = udp_new();
+//   ip_set_option(pcb, SOF_BROADCAST);
+//   udp_bind(pcb, IP_ADDR_ANY, 0);
+//   udp_connect(pcb, IP_ADDR_ANY, 10);
+//   xprintf("Default task start\n");
+//   struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
+//   struct ip4_addr resolved;
+
+  RTC_TimeTypeDef t;
+  RTC_DateTypeDef d;
   /* Infinite loop */
-  for(;;){
-	char key = inkey();
-	if(key){
-		xprintf("%c\n", key);
-		switch(dns_gethostbyname("pool.ntp.org", &resolved, sntp_dns_found, NULL)){
-			case ERR_OK:
-				xprintf("OK: %#x\n", resolved.addr);
-				break;
-			case ERR_INPROGRESS:
-				xprintf("Waiting for server address to be resolved.\n");
-				break;
-		}
-		////err_t E = udp_sendto(pcb, A, IP_ADDR_BROADCAST, 10);
-		//if(E == ERR_OK){
-		//	xprintf("OK\n");
-		//}
-		//else {
-		//	xprintf("%d\n", E);
-		//}
-	}
-	osDelay(100);
+  for (;;) {
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+      display_time(&t, &d);
+//       xprintf("Button pressed!\n");
+//       xprintf("OK!\n");
+    }
+      
+//     char key = inkey();
+//     if(key){
+//       xprintf("%c\n", key);
+//       switch(dns_gethostbyname("pool.ntp.org", &resolved, sntp_dns_found, NULL)){
+//         case ERR_OK:
+//           xprintf("OK: %#x\n", resolved.addr);
+//           break;
+//         case ERR_INPROGRESS:
+//           xprintf("Waiting for server address to be resolved.\n");
+//           break;
+//       }
+//       err_t E = udp_sendto(pcb, A, IP_ADDR_BROADCAST, 10);
+//       if(E == ERR_OK){
+//       	xprintf("OK\n");
+//       }
+//       else {
+//       	xprintf("%d\n", E);
+//       }
+//     }
+
+    osDelay(100);
   }
 
   /* USER CODE END 5 */ 

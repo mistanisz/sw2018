@@ -45,6 +45,8 @@ Src/stm32f7xx_it.c \
 Src/stm32f7xx_hal_msp.c \
 Src/dbgu.c \
 Src/term_io.c \
+Src/timespec.c \
+Src/timesync.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_eth.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_cortex.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_tim.c \
