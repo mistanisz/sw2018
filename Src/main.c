@@ -58,6 +58,10 @@
 /* USER CODE BEGIN Includes */
 #include "lwip/dns.h"
 #include "lwip/ip_addr.h"
+#include "lwip/opt.h"
+#include "lwip/sys.h"
+#include "lwip/udp.h"
+#include "lwip/sockets.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -85,7 +89,7 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void sntp_dns_found(const char* hostname, ip4_addr_t *ipaddr, void *arg);
+static void sntp_dns_found(const char* hostname, struct ip4_addr *ipaddr, void *arg);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -172,7 +176,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -426,7 +430,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 static void
-sntp_dns_found(const char* hostname, ip4_addr_t *ipaddr, void *arg)
+sntp_dns_found(const char* hostname, struct ip4_addr *ipaddr, void *arg)
 {
   if (ipaddr != NULL) {
     xprintf("%#x\n", ipaddr->addr);
@@ -468,30 +472,35 @@ void StartDefaultTask(void const * argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
-
+  
+  
 
   /* USER CODE BEGIN 5 */
-//   pcb = udp_new();
-//   ip_set_option(pcb, SOF_BROADCAST);
-//   udp_bind(pcb, IP_ADDR_ANY, 0);
-//   udp_connect(pcb, IP_ADDR_ANY, 10);
-//   xprintf("Default task start\n");
-//   struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
-//   struct ip4_addr resolved;
+  pcb = udp_new();
+  ip_set_option(pcb, SOF_BROADCAST);
+  udp_bind(pcb, IP_ADDR_ANY, 0);
+  udp_connect(pcb, IP_ADDR_ANY, 10);
+  xprintf("Default task start\n");
+  struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
+  struct ip4_addr resolved;
 
-  RTC_TimeTypeDef t;
-  RTC_DateTypeDef d;
+  ip4_addr_t *addr = get_ip();
+  xprintf("%o\n", addr->addr);
+//   RTC_TimeTypeDef t;
+//   RTC_DateTypeDef d;
   /* Infinite loop */
   for (;;) {
-    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
-      display_time(&t, &d);
+//     if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+//       display_time(&t, &d);
 //       xprintf("Button pressed!\n");
 //       xprintf("OK!\n");
-    }
+//     }
       
-//     char key = inkey();
-//     if(key){
-//       xprintf("%c\n", key);
+    char key = inkey();
+    if(key){
+      xprintf("%c\n", key);
+      int res = dns_gethostbyname("pl.pool.ntp.org", &resolved, sntp_dns_found, NULL);
+      xprintf("%d\n", res);
 //       switch(dns_gethostbyname("pool.ntp.org", &resolved, sntp_dns_found, NULL)){
 //         case ERR_OK:
 //           xprintf("OK: %#x\n", resolved.addr);
@@ -499,6 +508,8 @@ void StartDefaultTask(void const * argument)
 //         case ERR_INPROGRESS:
 //           xprintf("Waiting for server address to be resolved.\n");
 //           break;
+//         default:
+//           xprintf("okok\n");
 //       }
 //       err_t E = udp_sendto(pcb, A, IP_ADDR_BROADCAST, 10);
 //       if(E == ERR_OK){
@@ -507,7 +518,7 @@ void StartDefaultTask(void const * argument)
 //       else {
 //       	xprintf("%d\n", E);
 //       }
-//     }
+    }
 
     osDelay(100);
   }
