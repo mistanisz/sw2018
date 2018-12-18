@@ -55,6 +55,10 @@
 /* USER CODE BEGIN Includes */
 #include "lwip/dns.h"
 #include "lwip/ip_addr.h"
+#include "term_io.h"
+#include "dbgu.h"
+#include "ansi.h"
+#include "sntp.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -82,11 +86,12 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void sntp_dns_found(const char* hostname, ip4_addr *ipaddr, void *arg);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 #define PRINTF_USES_HAL_TX		0
+#define SNTP_SERVER_DNS 1
+#define SNTP_SERVER_ADDRESS "pool.ntp.org"
 
 int __io_putchar(int ch)
 {
@@ -113,6 +118,26 @@ char inkey(void)
 		return 0;
 }
 struct udp_pcb *pcb;
+
+static void
+display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
+{
+//   time_t seconds = time(NULL);
+//   char buffer[32];
+//   strftime(buffer, 32, "%H:%M:%S\n", localtime(&seconds));
+//   xprintf("Time is: %s", buffer);
+//   RTC_TimeTypeDef t;
+//   RTC_DateTypeDef d;
+        if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
+        {
+                _Error_Handler(__FILE__, __LINE__);
+        }
+        if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
+        {
+                _Error_Handler(__FILE__, __LINE__);
+        }
+        xprintf("Time is: %d:%d:%d\n", t->Hours, t->Minutes, t->Seconds);
+}
 
 /* USER CODE END 0 */
 
@@ -169,7 +194,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -422,15 +447,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-static void
-sntp_dns_found(const char* hostname, ip4_addr *ipaddr, void *arg)
-{
-  if (ipaddr != NULL) {
-    xprintf("%#x\n", ipaddr->addr);
-  } else {
-    xprintf("address is null\n");
-  }
-}
 
 /* USER CODE END 4 */
 
@@ -447,35 +463,32 @@ void StartDefaultTask(void const * argument)
   MX_LWIP_Init();
 
   /* USER CODE BEGIN 5 */
-  pcb = udp_new();
-  ip_set_option(pcb, SOF_BROADCAST);
-  udp_bind(pcb, IP_ADDR_ANY, 0);
-  udp_connect(pcb, IP_ADDR_ANY, 10);
+//  pcb = udp_new();
+//  ip_set_option(pcb, SOF_BROADCAST);
+//  udp_bind(pcb, IP_ADDR_ANY, 0);
+//  udp_connect(pcb, IP_ADDR_ANY, 10);
+//  struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
+//  struct ip4_addr resolved;
+//  /* Infinite loop */
   xprintf("Default task start\n");
-  struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
-  struct ip4_addr resolved;
-  /* Infinite loop */
-  for(;;){
-	char key = inkey();
-	if(key){
-		xprintf("%c\n", key);
-		switch(dns_gethostbyname("pool.ntp.org", &resolved, sntp_dns_found, NULL)){
-			case ERR_OK:
-				xprintf("OK: %#x\n", resolved.addr);
-				break;
-			case ERR_INPROGRESS:
-				xprintf("Waiting for server address to be resolved.\n");
-				break;
-		}
-		////err_t E = udp_sendto(pcb, A, IP_ADDR_BROADCAST, 10);
-		//if(E == ERR_OK){
-		//	xprintf("OK\n");
-		//}
-		//else {
-		//	xprintf("%d\n", E);
-		//}
-	}
-	osDelay(100);
+
+  RTC_TimeTypeDef t;
+  RTC_DateTypeDef d;
+
+  display_time(&t, &d);
+
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, SNTP_SERVER_ADDRESS);
+  sntp_init();
+
+  for (;;) {
+    char key = inkey();
+//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+    if (key) {
+            display_time(&t, &d);
+//            xprintf("started\n");
+    }
+    osDelay(100);
   }
 
   /* USER CODE END 5 */ 

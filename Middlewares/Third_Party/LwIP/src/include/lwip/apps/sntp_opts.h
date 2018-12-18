@@ -69,14 +69,14 @@
  * \#define SNTP_SERVER_ADDRESS "pool.ntp.org"
  */
 #if !defined SNTP_SERVER_DNS || defined __DOXYGEN__
-#define SNTP_SERVER_DNS            0
+#define SNTP_SERVER_DNS            1
 #endif
 
 /**
  * SNTP_DEBUG: Enable debugging for SNTP.
  */
 #if !defined SNTP_DEBUG || defined __DOXYGEN__
-#define SNTP_DEBUG                  LWIP_DBG_OFF
+#define SNTP_DEBUG                  LWIP_DBG_ON
 #endif
 
 /** SNTP server port */
