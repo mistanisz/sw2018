@@ -122,12 +122,6 @@ struct udp_pcb *pcb;
 static void
 display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
-//   time_t seconds = time(NULL);
-//   char buffer[32];
-//   strftime(buffer, 32, "%H:%M:%S\n", localtime(&seconds));
-//   xprintf("Time is: %s", buffer);
-//   RTC_TimeTypeDef t;
-//   RTC_DateTypeDef d;
         if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
         {
                 _Error_Handler(__FILE__, __LINE__);
@@ -136,7 +130,32 @@ display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
         {
                 _Error_Handler(__FILE__, __LINE__);
         }
-        xprintf("Time is: %d:%d:%d\n", t->Hours, t->Minutes, t->Seconds);
+        xprintf("Time is: %d:%d:%d:%ld\n", t->Hours, t->Minutes, t->Seconds, t->SubSeconds);
+}
+
+void
+set_time(int sec, int us)
+{
+        RTC_TimeTypeDef t;
+        int r = sec % 86400;
+        t.Hours = r / 3600;
+        r%=3600;
+        t.Minutes = r / 60;
+        r%=60;
+        t.Seconds = r;
+        t.SubSeconds = us;
+        t.SecondFraction = 255;
+        if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
+        {
+                _Error_Handler(__FILE__, __LINE__);
+        }
+}
+
+void
+test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
+{
+//        set_time(0, 10);
+        display_time(t, d);
 }
 
 /* USER CODE END 0 */
@@ -472,20 +491,22 @@ void StartDefaultTask(void const * argument)
 //  /* Infinite loop */
   xprintf("Default task start\n");
 
-  RTC_TimeTypeDef t;
-  RTC_DateTypeDef d;
+        RTC_TimeTypeDef t;
+        RTC_DateTypeDef d;
+//        set_time();
 
-  display_time(&t, &d);
+//  display_time(&t, &d);
 
-  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//  sntp_setoperatingmode(SNTP_OPMODE_POLL);
 //  sntp_setservername(0, SNTP_SERVER_ADDRESS);
-  sntp_init();
+//  sntp_init();
 
   for (;;) {
     char key = inkey();
 //    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
     if (key) {
-            display_time(&t, &d);
+//            display_time(&t, &d);
+        test_set_time(&t, &d);
 //            xprintf("started\n");
     }
     osDelay(100);

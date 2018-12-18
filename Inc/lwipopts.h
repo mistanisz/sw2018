@@ -144,6 +144,9 @@
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
 #define LWIP_DEBUG 1
+#define SNTP_SET_SYSTEM_TIME_US(sec, us) {\
+        set_time(sec, us);\
+}
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

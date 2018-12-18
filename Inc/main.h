@@ -118,7 +118,7 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-
+void set_time(int sec, int us);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
