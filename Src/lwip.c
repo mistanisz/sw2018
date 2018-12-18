@@ -108,14 +108,11 @@ void MX_LWIP_Init(void)
 
   /* Start DHCP negotiation for a network interface (IPv4) */
   dhcp_start(&gnetif);
-}
+
 /* USER CODE BEGIN 3 */
 
-ip4_addr_t *get_ip(void)
-{
-    return &ipaddr;
-}
 /* USER CODE END 3 */
+}
 
 #ifdef USE_OBSOLETE_USER_CODE_SECTION_4
 /* Kept to help code migration. (See new 4_1, 4_2... sections) */

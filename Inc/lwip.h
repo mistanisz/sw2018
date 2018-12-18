@@ -78,7 +78,6 @@ extern ETH_HandleTypeDef heth;
 
 /* LWIP init function */	
 void MX_LWIP_Init(void);
-ip4_addr_t *get_ip(void);
 
 #if !WITH_RTOS
 /* USER CODE BEGIN 1 */
@@ -88,7 +87,6 @@ ip4_addr_t *get_ip(void);
  *   - Handle timeouts if NO_SYS_NO_TIMERS not set
  */ 
 void MX_LWIP_Process(void);
-// ip4_addr_t *get_ip(void);
 
 /* USER CODE END 1 */
 #endif /* WITH_RTOS */
