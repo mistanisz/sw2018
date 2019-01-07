@@ -117,45 +117,46 @@ char inkey(void)
 	else
 		return 0;
 }
+
 struct udp_pcb *pcb;
 
 static void
 display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
-        if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
-        {
-                _Error_Handler(__FILE__, __LINE__);
-        }
-        if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
-        {
-                _Error_Handler(__FILE__, __LINE__);
-        }
-        xprintf("Time is: %d:%d:%d:%ld\n", t->Hours, t->Minutes, t->Seconds, t->SubSeconds);
+  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  xprintf("Time is: %d:%d:%d:%ld\n", t->Hours, t->Minutes, t->Seconds, t->SubSeconds);
 }
 
 void
 set_time(int sec, int us)
 {
-        RTC_TimeTypeDef t;
-        int r = sec % 86400;
-        t.Hours = r / 3600;
-        r%=3600;
-        t.Minutes = r / 60;
-        r%=60;
-        t.Seconds = r;
-        t.SubSeconds = us;
-        t.SecondFraction = 255;
-        if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
-        {
-                _Error_Handler(__FILE__, __LINE__);
-        }
+  RTC_TimeTypeDef t;
+  int r = sec % 86400;
+  t.Hours = r / 3600;
+  r%=3600;
+  t.Minutes = r / 60;
+  r%=60;
+  t.Seconds = r;
+  t.SubSeconds = us;
+  t.SecondFraction = 255;
+  if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 }
 
 void
 test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
 //        set_time(0, 10);
-        display_time(t, d);
+  display_time(t, d);
 }
 
 /* USER CODE END 0 */
@@ -482,12 +483,7 @@ void StartDefaultTask(void const * argument)
   MX_LWIP_Init();
 
   /* USER CODE BEGIN 5 */
-//  pcb = udp_new();
-//  ip_set_option(pcb, SOF_BROADCAST);
-//  udp_bind(pcb, IP_ADDR_ANY, 0);
-//  udp_connect(pcb, IP_ADDR_ANY, 10);
-//  struct pbuf *A = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
-//  struct ip4_addr resolved;
+
 //  /* Infinite loop */
   xprintf("Default task start\n");
 
