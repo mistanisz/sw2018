@@ -137,15 +137,20 @@ display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 void
 set_time(int sec, int us)
 {
+  int ms = 1000 - (us / 1000);
+//  const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
+  vTaskDelay(ms / portTICK_PERIOD_MS);
+
   RTC_TimeTypeDef t;
-  int r = sec % 86400;
+  int r = (sec + 1) % 86400;
   t.Hours = r / 3600;
   r%=3600;
   t.Minutes = r / 60;
   r%=60;
   t.Seconds = r;
-  t.SubSeconds = us;
-  t.SecondFraction = 255;
+//  t.SubSeconds = us;
+//  t.SecondFraction = 255;
+
   if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -507,19 +512,17 @@ void StartDefaultTask(void const * argument)
 
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, SNTP_SERVER_ADDRESS);
-  sntp_init();
-
-  wait_until_full_second();
-  sntp_init();
+//  sntp_init();
 
   for (;;) {
 //    char key = inkey();
-//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+      sntp_init();
 //    if (key) {
 //            display_time(&t, &d);
 //        test_set_time(&t, &d);
 //            xprintf("started\n");
-//    }
+    }
     osDelay(100);
   }
 
