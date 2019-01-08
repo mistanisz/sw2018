@@ -156,7 +156,19 @@ void
 test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
 //        set_time(0, 10);
+//  u32_t a = sntp_last_timestamp_sent[0];
   display_time(t, d);
+}
+
+void
+wait_until_full_second()
+{
+  while (sntp_last_timestamp_sent[0] == 0) {
+    osDelay(100);
+  }
+  u32_t ms = lwip_ntohl(sntp_last_timestamp_sent[1]) / 4295 / 1000;
+  const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
+  vTaskDelay(delay_until_full_second);
 }
 
 /* USER CODE END 0 */
@@ -487,24 +499,27 @@ void StartDefaultTask(void const * argument)
 //  /* Infinite loop */
   xprintf("Default task start\n");
 
-        RTC_TimeTypeDef t;
-        RTC_DateTypeDef d;
+  RTC_TimeTypeDef t;
+  RTC_DateTypeDef d;
 //        set_time();
 
 //  display_time(&t, &d);
 
-//  sntp_setoperatingmode(SNTP_OPMODE_POLL);
-//  sntp_setservername(0, SNTP_SERVER_ADDRESS);
-//  sntp_init();
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, SNTP_SERVER_ADDRESS);
+  sntp_init();
+
+  wait_until_full_second();
+  sntp_init();
 
   for (;;) {
-    char key = inkey();
+//    char key = inkey();
 //    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
-    if (key) {
+//    if (key) {
 //            display_time(&t, &d);
-        test_set_time(&t, &d);
+//        test_set_time(&t, &d);
 //            xprintf("started\n");
-    }
+//    }
     osDelay(100);
   }
 

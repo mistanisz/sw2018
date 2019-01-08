@@ -58,6 +58,8 @@ u8_t sntp_enabled(void);
 void sntp_setserver(u8_t idx, const ip_addr_t *addr);
 const ip_addr_t* sntp_getserver(u8_t idx);
 
+static u32_t sntp_last_timestamp_sent[2];
+
 #if SNTP_SERVER_DNS
 void sntp_setservername(u8_t idx, char *server);
 char *sntp_getservername(u8_t idx);
