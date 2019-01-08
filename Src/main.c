@@ -92,6 +92,7 @@ void StartDefaultTask(void const * argument);
 #define PRINTF_USES_HAL_TX		0
 #define SNTP_SERVER_DNS 1
 #define SNTP_SERVER_ADDRESS "pool.ntp.org"
+#define SECOND 1000 / portTICK_PERIOD_MS
 
 int __io_putchar(int ch)
 {
@@ -134,9 +135,58 @@ display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
   xprintf("Time is: %d:%d:%d:%ld\n", t->Hours, t->Minutes, t->Seconds, t->SubSeconds);
 }
 
+static int
+get_second(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
+{
+  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+  return t->Seconds;
+}
+
+static void
+led_on(void)
+{
+  HAL_GPIO_WritePin(GPIOB, LD1_Pin, GPIO_PIN_SET);
+}
+
+static void
+led_off(void)
+{
+  HAL_GPIO_WritePin(GPIOB, LD1_Pin, GPIO_PIN_RESET);
+}
+
+static void
+blink_led()
+{
+  static RTC_TimeTypeDef t;
+  static RTC_DateTypeDef d;
+  int second;
+  for (;;) {
+    second = get_second(&t, &d);
+    switch (second % 2) {
+      case 1:
+//        xprintf("led_on\n");
+        led_on();
+        break;
+      case 0:
+//        xprintf("led_off\n");
+        led_off();
+        break;
+    }
+    vTaskDelay(10);
+  }
+}
+
 void
 set_time(int sec, int us)
 {
+  xprintf("setting time...\n");
   int ms = 1000 - (us / 1000);
 //  const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
   vTaskDelay(ms / portTICK_PERIOD_MS);
@@ -148,8 +198,8 @@ set_time(int sec, int us)
   t.Minutes = r / 60;
   r%=60;
   t.Seconds = r;
-//  t.SubSeconds = us;
-//  t.SecondFraction = 255;
+  t.SubSeconds = us;
+  t.SecondFraction = 255;
 
   if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
   {
@@ -157,13 +207,13 @@ set_time(int sec, int us)
   }
 }
 
-void
-test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
-{
-//        set_time(0, 10);
-//  u32_t a = sntp_last_timestamp_sent[0];
-  display_time(t, d);
-}
+//void
+//test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
+//{
+////        set_time(0, 10);
+////  u32_t a = sntp_last_timestamp_sent[0];
+//  display_time(t, d);
+//}
 
 void
 wait_until_full_second()
@@ -195,7 +245,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -231,10 +280,12 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal + 1, 0, 2048);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
+//  TaskHandle_t led_handle = NULL;
+//  xTaskCreate(blink_led, "LED", 128, NULL, osPriorityNormal, &led_handle);
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -504,24 +555,26 @@ void StartDefaultTask(void const * argument)
 //  /* Infinite loop */
   xprintf("Default task start\n");
 
-  RTC_TimeTypeDef t;
-  RTC_DateTypeDef d;
-//        set_time();
-
-//  display_time(&t, &d);
+//  RTC_TimeTypeDef t;
+//  RTC_DateTypeDef d;
 
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, SNTP_SERVER_ADDRESS);
 //  sntp_init();
+  TaskHandle_t led_handle = NULL;
+  BaseType_t xReturned;
+  xReturned = xTaskCreate(blink_led, "LED", 128, NULL, osPriorityNormal, &led_handle);
+  if (xReturned != pdPASS)
+  {
+//    vTaskDelete( xHandle );
+    xprintf("task error: %d\n", xReturned);
+  }
 
   for (;;) {
 //    char key = inkey();
+//    if (key) {
     if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
       sntp_init();
-//    if (key) {
-//            display_time(&t, &d);
-//        test_set_time(&t, &d);
-//            xprintf("started\n");
     }
     osDelay(100);
   }
