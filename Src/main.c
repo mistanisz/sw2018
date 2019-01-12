@@ -215,16 +215,16 @@ set_time(int sec, int us)
 //  display_time(t, d);
 //}
 
-void
-wait_until_full_second()
-{
-  while (sntp_last_timestamp_sent[0] == 0) {
-    osDelay(100);
-  }
-  u32_t ms = lwip_ntohl(sntp_last_timestamp_sent[1]) / 4295 / 1000;
-  const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
-  vTaskDelay(delay_until_full_second);
-}
+// void
+// wait_until_full_second()
+// {
+//   while (sntp_last_timestamp_sent[0] == 0) {
+//     osDelay(100);
+//   }
+//   u32_t ms = lwip_ntohl(sntp_last_timestamp_sent[1]) / 4295 / 1000;
+//   const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
+//   vTaskDelay(delay_until_full_second);
+// }
 
 /* USER CODE END 0 */
 
