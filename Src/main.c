@@ -121,8 +121,6 @@ inkey(void)
   }
 }
 
-struct udp_pcb *pcb;
-
 static void
 display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
@@ -549,7 +547,7 @@ void StartDefaultTask(void const * argument)
 
   if (xReturned != pdPASS) {
     vTaskDelete(xHandle);
-    xprintf("task error: %d\n", xReturned);
+    xprintf("task error: %ld\n", xReturned);
   }
 
   for (;;) {
