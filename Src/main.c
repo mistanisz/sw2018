@@ -89,34 +89,36 @@ void StartDefaultTask(void const * argument);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-#define PRINTF_USES_HAL_TX		0
+#define PRINTF_USES_HAL_TX 0
 #define SNTP_SERVER_DNS 1
 #define SNTP_SERVER_ADDRESS "pool.ntp.org"
-#define SECOND 1000 / portTICK_PERIOD_MS
 
-int __io_putchar(int ch)
+int
+__io_putchar(int ch)
 {
-	uint8_t data = ch;
-	#if PRINTF_USES_HAL_TX
-		HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*)&data, len, 100);	
-	#else
-		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TXE) == RESET) { ; }
-		huart3.Instance->TDR = (uint16_t)data;
-	#endif
-	return 0;
+  uint8_t data = ch;
+  
+  #if PRINTF_USES_HAL_TX
+    HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*) &data, len, 100);
+  #else
+    while (__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TXE) == RESET) { ; }
+    huart3.Instance->TDR = (uint16_t) data;
+  #endif
+  
+  return 0;
 }
 
-char inkey(void)
+char
+inkey(void)
 {
-	uint32_t flags = huart3.Instance->ISR;
-	
-	if((flags & UART_FLAG_RXNE) || (flags & UART_FLAG_ORE))
-	{
-		__HAL_UART_CLEAR_OREFLAG(&huart3);
-		return (huart3.Instance->RDR);
-	}
-	else
-		return 0;
+  uint32_t flags = huart3.Instance->ISR;
+
+  if ((flags & UART_FLAG_RXNE) || (flags & UART_FLAG_ORE)) {
+    __HAL_UART_CLEAR_OREFLAG(&huart3);
+    return (huart3.Instance->RDR);
+  } else {
+    return 0;
+  }
 }
 
 struct udp_pcb *pcb;
@@ -124,28 +126,28 @@ struct udp_pcb *pcb;
 static void
 display_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
-  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
-  {
+  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
-  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
-  {
+  
+  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
-  xprintf("Time is: %d:%d:%d:%ld\n", t->Hours, t->Minutes, t->Seconds, t->SubSeconds);
+  
+  xprintf("Time is: %02d:%02d:%02d\n", t->Hours, t->Minutes, t->Seconds);
 }
 
 static int
 get_second(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
 {
-  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK)
-  {
+  if (HAL_RTC_GetTime(&hrtc, t, RTC_FORMAT_BIN) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
-  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK)
-  {
+  
+  if (HAL_RTC_GetDate(&hrtc, d, RTC_FORMAT_BIN) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
+  
   return t->Seconds;
 }
 
@@ -167,8 +169,10 @@ blink_led()
   static RTC_TimeTypeDef t;
   static RTC_DateTypeDef d;
   int second;
+  
   for (;;) {
     second = get_second(&t, &d);
+  
     switch (second % 2) {
       case 1:
 //        xprintf("led_on\n");
@@ -179,6 +183,7 @@ blink_led()
         led_off();
         break;
     }
+    
     vTaskDelay(10);
   }
 }
@@ -187,44 +192,25 @@ void
 set_time(int sec, int us)
 {
   xprintf("setting time...\n");
+  
   int ms = 1000 - (us / 1000);
-//  const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
   vTaskDelay(ms / portTICK_PERIOD_MS);
-
+  
   RTC_TimeTypeDef t;
+  
   int r = (sec + 1) % 86400;
   t.Hours = r / 3600;
-  r%=3600;
+  r %= 3600;
   t.Minutes = r / 60;
-  r%=60;
+  r %= 60;
   t.Seconds = r;
-  t.SubSeconds = us;
-  t.SecondFraction = 255;
+//   t.SubSeconds = us;
+//   t.SecondFraction = 255;
 
-  if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK)
-  {
+  if (HAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
 }
-
-//void
-//test_set_time(RTC_TimeTypeDef *t, RTC_DateTypeDef *d)
-//{
-////        set_time(0, 10);
-////  u32_t a = sntp_last_timestamp_sent[0];
-//  display_time(t, d);
-//}
-
-// void
-// wait_until_full_second()
-// {
-//   while (sntp_last_timestamp_sent[0] == 0) {
-//     osDelay(100);
-//   }
-//   u32_t ms = lwip_ntohl(sntp_last_timestamp_sent[1]) / 4295 / 1000;
-//   const TickType_t delay_until_full_second = ms / portTICK_PERIOD_MS;
-//   vTaskDelay(delay_until_full_second);
-// }
 
 /* USER CODE END 0 */
 
@@ -555,18 +541,14 @@ void StartDefaultTask(void const * argument)
 //  /* Infinite loop */
   xprintf("Default task start\n");
 
-//  RTC_TimeTypeDef t;
-//  RTC_DateTypeDef d;
-
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, SNTP_SERVER_ADDRESS);
-//  sntp_init();
-  TaskHandle_t led_handle = NULL;
-  BaseType_t xReturned;
-  xReturned = xTaskCreate(blink_led, "LED", 128, NULL, osPriorityNormal, &led_handle);
-  if (xReturned != pdPASS)
-  {
-//    vTaskDelete( xHandle );
+
+  TaskHandle_t xHandle = NULL;
+  BaseType_t xReturned = xTaskCreate(blink_led, "LED", 128, NULL, osPriorityNormal, &xHandle);
+
+  if (xReturned != pdPASS) {
+    vTaskDelete(xHandle);
     xprintf("task error: %d\n", xReturned);
   }
 
@@ -576,6 +558,7 @@ void StartDefaultTask(void const * argument)
     if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
       sntp_init();
     }
+    
     osDelay(100);
   }
 
