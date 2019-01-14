@@ -186,7 +186,7 @@ blink_led()
         break;
     }
     
-    vTaskDelay(10);
+    vTaskDelay(1);
   }
 }
 
